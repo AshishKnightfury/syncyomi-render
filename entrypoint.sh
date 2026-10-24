@@ -12,6 +12,10 @@ for var in SESSION_SECRET PG_HOST PG_USER PG_PASSWORD; do
   fi
 done
 
+# SyncYomi pastes the password into a postgres:// URL unescaped, so percent-encode it
+# (lib/pq decodes it again). jq ships in the SyncYomi image.
+PG_PASSWORD_ENC=$(jq -rn --arg v "$PG_PASSWORD" '$v|@uri')
+
 mkdir -p /config
 cat > /config/config.toml <<EOF
 host = "0.0.0.0"
@@ -26,7 +30,7 @@ postgresHost = "${PG_HOST}"
 postgresPort = ${PG_PORT:-5432}
 postgresDatabase = "${PG_DATABASE:-postgres}"
 postgresUser = "${PG_USER}"
-postgresPass = "${PG_PASSWORD}"
+postgresPass = "${PG_PASSWORD_ENC}"
 postgresSslMode = "${PG_SSLMODE:-require}"
 EOF
 
